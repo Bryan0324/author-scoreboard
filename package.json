@@ -1,0 +1,30 @@
+{
+  "name": "author-scoreboard",
+  "version": "1.0.0",
+  "description": "HydroOJ plugin for per-domain author rankings and created problem lists.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --check index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bryan0324/author-scoreboard.git"
+  },
+  "keywords": [
+    "hydrooj",
+    "plugin",
+    "ranking"
+  ],
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "files": [
+    "index.js",
+    "templates",
+    "README.md"
+  ],
+  "bugs": {
+    "url": "https://github.com/Bryan0324/author-scoreboard/issues"
+  },
+  "homepage": "https://github.com/Bryan0324/author-scoreboard#readme"
+}

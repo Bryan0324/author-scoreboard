@@ -1,0 +1,27 @@
+<li class="section__tab-item">
+  <h1 class="section__tab-title">{{ _('Created Problems') }}</h1>
+  <div class="section__tab-main">
+    {% if not createdProblems or not createdProblems.length %}
+      <div class="typo section__body no-media">
+        <p>{{ _('This user has not created any problems in this domain yet.') }}</p>
+      </div>
+    {% else %}
+      <div class="typo section__body no-media">
+        {% set _mark = Math.ceil(createdProblems.length/4) %}
+        {% macro col(pdocs) %}
+          <div class="medium-3 columns"><ul>
+            {% for pdoc in pdocs %}
+              <li>{{ problem.render_problem_title(pdoc, show_tags=false, small=true) }}</li>
+            {% endfor %}
+          </ul></div>
+        {% endmacro %}
+        <div class="row">
+          {{ col(createdProblems.slice(0, _mark)) }}
+          {{ col(createdProblems.slice(_mark, _mark*2)) }}
+          {{ col(createdProblems.slice(_mark*2, _mark*3)) }}
+          {{ col(createdProblems.slice(_mark*3)) }}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</li>
