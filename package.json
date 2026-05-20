@@ -4,7 +4,8 @@
   "description": "HydroOJ plugin for per-domain author rankings and created problem lists.",
   "main": "index.js",
   "scripts": {
-    "test": "node --check index.js"
+    "build": "tsc",
+    "test": "npm run build -- --pretty false && node --check index.js"
   },
   "repository": {
     "type": "git",
@@ -20,9 +21,13 @@
   "type": "commonjs",
   "files": [
     "index.js",
+    "index.ts",
     "templates",
     "README.md"
   ],
+  "devDependencies": {
+    "typescript": "^6.0.3"
+  },
   "bugs": {
     "url": "https://github.com/Bryan0324/author-scoreboard/issues"
   },
