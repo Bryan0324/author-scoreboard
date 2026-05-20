@@ -124,7 +124,7 @@ class AuthorRankingHandler extends Handler {
       getSelfAuthorStats(domainId, this.user),
     ]);
 
-    this.response.template = 'ranking_author.html';
+    this.response.template = 'author_ranking.html';
     this.response.body = {
       authorRows: ranking.authorRows,
       currentUserAuthorStats: selfStats,
@@ -165,7 +165,7 @@ function loadI18n(ctx) {
 
 async function apply(ctx) {
   ctx.Route('author_ranking', '/ranking/author', AuthorRankingHandler, PERM.PERM_VIEW_RANKING);
-  ctx.injectUI('Nav', 'author_ranking', { prefix: 'ranking_author', before: 'ranking' }, PERM.PERM_VIEW_RANKING);
+  ctx.injectUI('Nav', 'author_ranking', { prefix: 'author_ranking', before: 'ranking' }, PERM.PERM_VIEW_RANKING);
   ctx.on('handler/after/UserDetail#get', extendUserDetail);
   loadI18n(ctx);
 }

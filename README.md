@@ -8,5 +8,5 @@ HydroOJ plugin that adds:
 ## Files
 
 - `index.js`: plugin entrypoint
-- `templates/ranking_author.html`: author ranking page
+- `templates/author_ranking.html`: author ranking page
 - `templates/partials/user_detail/author_problems.html`: user detail partial
