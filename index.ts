@@ -4,24 +4,26 @@ import {
   PRIV,
   ProblemModel,
   SystemModel,
+  User,
   UserModel,
   db,
+  Context,
 } from 'hydrooj';
-import DocumentModel = require('hydrooj/src/model/document');
+import * as DocumentModel from 'hydrooj/src/model/document';
 
 const documentCollection = db.collection('document');
 
-function getRankingVisibilityFilter(viewer) {
+function getRankingVisibilityFilter(viewer: User) {
   if (viewer.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) return {};
   return { hidden: false };
 }
 
-function getProfileVisibilityFilter(viewer, targetUid) {
+function getProfileVisibilityFilter(viewer: User, targetUid: number) {
   if (viewer.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || viewer._id === targetUid) return {};
   return { hidden: false };
 }
 
-async function getCreatedProblems(domainId, uid, viewer) {
+async function getCreatedProblems(domainId: string, uid: number, viewer: User) {
   return ProblemModel.getMulti(
     domainId,
     {
@@ -32,7 +34,7 @@ async function getCreatedProblems(domainId, uid, viewer) {
   ).toArray();
 }
 
-async function getAuthorRankRows(domainId, viewer, page) {
+async function getAuthorRankRows(domainId: string, viewer: User, page: number) {
   const pageSize = SystemModel.get('pagination.ranking') || 50;
   const match = {
     domainId,
@@ -75,7 +77,7 @@ async function getAuthorRankRows(domainId, viewer, page) {
   };
 }
 
-async function getSelfAuthorStats(domainId, viewer) {
+async function getSelfAuthorStats(domainId: string, viewer: User) {
   if (!viewer.hasPriv(PRIV.PRIV_USER_PROFILE)) return null;
 
   const match = {
@@ -116,7 +118,7 @@ async function getSelfAuthorStats(domainId, viewer) {
 }
 
 class AuthorRankingHandler extends Handler {
-  async get(domainId) {
+  async get(domainId: string) {
     const rawPage = Number(this.request.query.page);
     const page = Number.isInteger(rawPage) && rawPage > 0 ? rawPage : 1;
     const [ranking, selfStats] = await Promise.all([
@@ -136,7 +138,7 @@ class AuthorRankingHandler extends Handler {
   }
 }
 
-async function extendUserDetail(handler) {
+async function extendUserDetail(handler: Handler) {
   if (handler.response.template !== 'user_detail.html') return;
   const udoc = handler.response.body?.udoc;
   if (!udoc?._id) return;
@@ -146,7 +148,7 @@ async function extendUserDetail(handler) {
   handler.response.body.createdProblemCount = createdProblems.length;
 }
 
-function loadI18n(ctx) {
+function loadI18n(ctx: Context) {
   ctx.i18n.load('en', {
     author_ranking: 'Author Ranking',
     'Created Problems': 'Created Problems',
@@ -163,7 +165,7 @@ function loadI18n(ctx) {
   });
 }
 
-async function apply(ctx) {
+async function apply(ctx: Context) {
   ctx.Route('author_ranking', '/ranking/author', AuthorRankingHandler, PERM.PERM_VIEW_RANKING);
   ctx.injectUI('Nav', 'author_ranking', { prefix: 'author_ranking', before: 'ranking' }, PERM.PERM_VIEW_RANKING);
   ctx.on('handler/after/UserDetail#get', extendUserDetail);
