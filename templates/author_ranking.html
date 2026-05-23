@@ -1,11 +1,12 @@
-{% extends "layout/basic.html" %}
 {% import "components/paginator.html" as paginator with context %}
 {% import "components/nothing.html" as nothing with context %}
-{% block content %}
-<div class="row">
+{% import "components/user.html" as userComponent with context %}
+{% extends "layout/html5.html" %}
+{% block body %}
+<!-- <div class="row">
   <div class="medium-12 columns">
-    <div class="section">
-      <div class="section__body no-padding">
+    <div class="section"> -->
+      <div class="section__body no-padding" id="ranking_author">
         <div data-fragment-id="ranking_author">
           {% if not authorRows.length %}
             {{ nothing.render('No users have created any visible problems in this domain yet.') }}
@@ -29,7 +30,7 @@
               {% if currentUserAuthorStats %}
               <tr>
                 <td class="col--rank">{{ currentUserAuthorStats.rank }}</td>
-                <td class="col--user">{{ user.render_inline(currentUserAuthorStats) }}</td>
+                <td class="col--user">{{ userComponent.render_inline(currentUserAuthorStats) }}</td>
                 <td class="col--rp">{{ currentUserAuthorStats.problemCount }}</td>
                 <td class="col--bio">{{ currentUserAuthorStats.bio|default('')|truncate(64, true)|markdownInline|safe }}</td>
               </tr>
@@ -37,7 +38,7 @@
               {%- for udoc in authorRows -%}
               <tr>
                 <td class="col--rank">{{ (page - 1) * pageSize + loop.index }}</td>
-                <td class="col--user">{{ user.render_inline(udoc) }}</td>
+                <td class="col--user">{{ userComponent.render_inline(udoc) }}</td>
                 <td class="col--rp">{{ udoc.problemCount }}</td>
                 <td class="col--bio">{{ udoc.bio|default('')|truncate(64, true)|markdownInline|safe }}</td>
               </tr>
@@ -48,7 +49,48 @@
           {% endif %}
         </div>
       </div>
-    </div>
+    <!-- </div>
   </div>
-</div>
+</div> -->
+<script>
+  (function(){
+    function sendHeight(){
+      try{
+        const h = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+        parent.postMessage({ source: 'authorRanking', height: h }, '*');
+      }catch(e){}
+    }
+    window.addEventListener('load', sendHeight);
+    window.addEventListener('resize', sendHeight);
+    try {
+      new MutationObserver(sendHeight).observe(document.body, { childList: true, subtree: true, attributes: true, characterData: true });
+    } catch (e) {}
+    setInterval(sendHeight, 1000);
+
+    // Intercept link clicks that navigate away and ask parent to navigate top-level
+    function handleNavIntent(ev) {
+      console.log('handleNavIntent', ev);
+      const a = ev.target && ev.target.closest ? ev.target.closest('a') : null;
+      if (!a || !a.href) return false;
+      if (a.target && a.target !== '' && a.target !== '_self') return false;
+      try {
+        const url = new URL(a.getAttribute('href') || a.href, location.origin);
+        if (!url.pathname.startsWith('/ranking/author')) {
+          ev.preventDefault();
+          try { ev.stopImmediatePropagation(); } catch (e) {}
+          parent.postMessage({ source: 'authorRanking', navigateTo: url.href }, '*');
+          return true;
+        }
+      } catch (e) {}
+      return false;
+    }
+    // capture mousedown to block some handlers or default navigation early
+    document.addEventListener('mousedown', function(ev){
+      try { handleNavIntent(ev); } catch (e) {}
+    }, true);
+    document.addEventListener('click', function(ev){
+      try { handleNavIntent(ev); } catch (e) {}
+    }, true);
+  })();
+</script>
 {% endblock %}

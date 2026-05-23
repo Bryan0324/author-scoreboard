@@ -60,13 +60,16 @@ async function getAuthorRankRows(domainId: string, viewer: User, page: number) {
   const udict = rows.length ? await UserModel.getList(domainId, rows.map((row) => row._id)) : {};
   const authorRows = rows.map((row) => {
     const udoc = udict[row._id];
-    return {
-      _id: row._id,
-      uname: udoc?.uname || `User ${row._id}`,
-      avatar: udoc?.avatar,
-      bio: udoc?.bio || '',
-      problemCount: row.problemCount,
-    };
+    if (!udoc) {
+      return {
+        _id: row._id,
+        uname: `User ${row._id}`,
+        avatar: undefined,
+        bio: '',
+        problemCount: row.problemCount,
+      };
+    }
+    return Object.assign(udoc, { problemCount: row.problemCount });
   });
 
   return {
@@ -110,15 +113,14 @@ async function getSelfAuthorStats(domainId: string, viewer: User) {
     { $count: 'count' },
   ]).toArray();
 
-  return {
-    ...viewer,
+  return Object.assign(viewer, {
     problemCount,
     rank: (higherRankCount[0]?.count || 0) + 1,
-  };
+  });
 }
 
 class AuthorRankingHandler extends Handler {
-  async get(domainId: string) {
+  async get({ domainId }: { domainId: string }) {
     const rawPage = Number(this.request.query.page);
     const page = Number.isInteger(rawPage) && rawPage > 0 ? rawPage : 1;
     const [ranking, selfStats] = await Promise.all([
@@ -167,7 +169,6 @@ function loadI18n(ctx: Context) {
 
 async function apply(ctx: Context) {
   ctx.Route('author_ranking', '/ranking/author', AuthorRankingHandler, PERM.PERM_VIEW_RANKING);
-  ctx.injectUI('Nav', 'author_ranking', { prefix: 'author_ranking', before: 'ranking' }, PERM.PERM_VIEW_RANKING);
   ctx.on('handler/after/UserDetail#get', extendUserDetail);
   loadI18n(ctx);
 }

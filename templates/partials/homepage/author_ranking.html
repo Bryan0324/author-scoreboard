@@ -1,56 +1,46 @@
-{% import "components/paginator.html" as paginator with context %}
-{% set authorRows = payload.authorRows %}
-{% set currentUserAuthorStats = payload.currentUserAuthorStats %}
-{% set page = payload.page %}
-{% set pageSize = payload.pageSize %}
-{% set ucount = payload.ucount %}
-{% set upcount = payload.upcount %}
 <div class="row">
   <div class="medium-12 columns">
-    <div class="section">
-      <div class="section__body no-padding">
-        <div data-fragment-id="ranking_author">
-          {% if not authorRows.length %}
-            {{ nothing.render('No users have created any visible problems in this domain yet.') }}
-          {% else %}
-          <table class="data-table">
-            <colgroup>
-              <col class="col--rank">
-              <col class="col--user">
-              <col class="col--rp">
-              <col class="col--bio">
-            </colgroup>
-            <thead>
-              <tr>
-                <th class="col--rank">{{ _('Rank') }}</th>
-                <th class="col--user">{{ _('Username') }}</th>
-                <th class="col--rp">{{ _('Problems Created') }}</th>
-                <th class="col--bio">{{ _('Bio') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% if currentUserAuthorStats %}
-              <tr>
-                <td class="col--rank">{{ currentUserAuthorStats.rank }}</td>
-                <td class="col--user">{{ user.render_inline(currentUserAuthorStats) }}</td>
-                <td class="col--rp">{{ currentUserAuthorStats.problemCount }}</td>
-                <td class="col--bio">{{ currentUserAuthorStats.bio|default('')|truncate(64, true)|markdownInline|safe }}</td>
-              </tr>
-              {% endif %}
-              {%- for udoc in authorRows -%}
-              <tr>
-                <td class="col--rank">{{ (page - 1) * pageSize + loop.index }}</td>
-                <td class="col--user">{{ user.render_inline(udoc) }}</td>
-                <td class="col--rp">{{ udoc.problemCount }}</td>
-                <td class="col--bio">{{ udoc.bio|default('')|truncate(64, true)|markdownInline|safe }}</td>
-              </tr>
-              {%- endfor -%}
-            </tbody>
-          </table>
-          {{ paginator.render(page, upcount) }}
-          {% endif %}
-        </div>
+    <div class="section" id="ranking_author">
+      <div class="section__body no-padding" data-fragment-id="ranking_author">
+        <iframe src="/ranking/author" id="authorRankingIframe" style="width:100%;border:0;" loading="lazy" title="Author Ranking"></iframe>
       </div>
+      <script>
+        (function(){
+          const iframe = document.getElementById('authorRankingIframe');
+          if (!iframe) return;
+
+          // Preferred: use postMessage from inner page to set height accurately.
+          function onMessage(e) {
+            try {
+              const data = e.data || {};
+              if (data && data.source === 'authorRanking' && typeof data.height === 'number') {
+                iframe.style.height = data.height + 'px';
+              }
+              if (data && data.source === 'authorRanking' && data.navigateTo) {
+                // navigate top-level when inner page requests navigation
+                try { window.top.location.href = data.navigateTo; } catch (err) { window.location.href = data.navigateTo; }
+              }
+            } catch (err) {}
+          }
+          window.addEventListener('message', onMessage, false);
+
+          // Fallback: attempt same-origin inspection and periodic resize
+          function resize() {
+            try {
+              const doc = iframe.contentDocument || iframe.contentWindow.document;
+              const h = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight);
+              iframe.style.height = h + 'px';
+            } catch (e) {
+              // cross-origin or not ready
+            }
+          }
+
+          iframe.addEventListener('load', () => { resize(); });
+          const tid = setInterval(resize, 700);
+
+          window.addEventListener('beforeunload', () => { clearInterval(tid); window.removeEventListener('message', onMessage); });
+        })();
+      </script>
     </div>
   </div>
 </div>
